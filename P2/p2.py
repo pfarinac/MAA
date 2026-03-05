@@ -9,8 +9,8 @@ from scipy.spatial.distance import pdist
 from scipy.cluster.hierarchy import fcluster, dendrogram, linkage
 
 
-X_train, y_train = mnist_reader.load_mnist('P2/data/fashion', kind='train')
-X_test, y_test = mnist_reader.load_mnist('P2/data/fashion', kind='t10k')
+X_train, y_train = mnist_reader.load_mnist('data/fashion', kind='train')
+X_test, y_test = mnist_reader.load_mnist('data/fashion', kind='t10k')
 
 print("Forma de X_train:", X_train.shape)
 print("Forma de y_train:", y_train.shape)
@@ -218,3 +218,61 @@ linkage_matrix = linkage(dist, "complete")
 
 plt.figure(X_train_norm)
 dendrogram
+
+k_list = range(2, 16)
+
+distortions_random = []
+silhouette_random = []
+v_measure_random = []
+
+distortions_pp = []
+silhouette_pp = []
+v_measure_pp = []
+
+
+for k in k_list:
+    # K-Means random
+    model_random = KMeans(n_clusters=k, init='random')
+    model_random.fit(X_train_pca)
+    label_random = model_random.predict(X_train_pca)
+    distortions_random.append(model_random.inertia_)
+    silhouette_random.append(silhouette_score(X_train_pca, label))
+    v_measure_random.append(v_measure_score(y_train, label))
+
+    # K-Means++
+    model_pp = KMeans(n_clusters=k, init='k-means++')
+    model_pp.fit(X_train_pca)
+    label_pp = model_pp.predict(X_train_pca)
+    distortions_pp.append(model_pp.inertia_)
+    silhouette_pp.append(silhouette_score(X_train_pca, label))
+    v_measure_pp.append(v_measure_score(y_train, label))
+
+plt.figure(figsize=(8, 6))
+plt.plot(k_list, distortions_random, "bx-", label="random")
+plt.plot(k_list, distortions_pp,     "rx-", label="k-means++")
+plt.xlabel("k", fontsize=18)
+plt.ylabel("Inercia", fontsize=18)
+plt.legend(fontsize=13)
+plt.setp(plt.gca().get_xticklabels(), fontsize=16)
+plt.setp(plt.gca().get_yticklabels(), fontsize=16)
+plt.show()
+
+plt.figure(figsize=(8, 6))
+plt.plot(k_list, silhouette_random, "bx-", label="random")
+plt.plot(k_list, silhouette_pp,     "rx-", label="k-means++")
+plt.xlabel("k", fontsize=18)
+plt.ylabel("Silhouette score", fontsize=18)
+plt.legend(fontsize=13)
+plt.setp(plt.gca().get_xticklabels(), fontsize=18)
+plt.setp(plt.gca().get_yticklabels(), fontsize=18)
+plt.show()
+
+plt.figure(figsize=(8, 6))
+plt.plot(k_list, v_measure_random, "bx-", label="random")
+plt.plot(k_list, v_measure_pp,     "rx-", label="k-means++")
+plt.xlabel("k", fontsize=18)
+plt.ylabel("V-measure score", fontsize=18)
+plt.legend(fontsize=13)
+plt.setp(plt.gca().get_xticklabels(), fontsize=18)
+plt.setp(plt.gca().get_yticklabels(), fontsize=18)
+plt.show()
